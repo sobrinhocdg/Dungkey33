@@ -1,6 +1,4 @@
-import socket
-import threading
-from queue import Queue
+import asyncio
 import os
 import sys
 import time
@@ -8,10 +6,11 @@ import math
 
 sys.dont_write_bytecode = True
 
-# --- [ CONSTANTES DO CÁLCULO ANGELICAL ] ---
-CHOIR_SIZE = int(math.sqrt(10000))  # 100
-Raziel_Timeout = math.cos(math.pi / 3)  # 0.5
-Sephiroth_Path = Queue()
+# --- [ GEOMETRIA SAGRADA SÊNIOR ] ---
+# C = sqrt(2^20) = 1024 conexões assíncronas
+Concurrence_Limit = int(math.sqrt(1 << 20)) 
+Raziel_Timeout = math.cos(math.pi / 3)  # 0.5 segundos
+
 Opened_Seals = []
 
 def limpar_tela():
@@ -28,65 +27,85 @@ def ressonancia_esoterica():
     print("   ⠹⣿⣿⣿⣶⣤⣤⣶⣿⣿⣿⠏   ")
     print("    ⠈⠻⣿⣿⣿⣿⣿⣿⣿⠟⠁    ")
     print("       ⠉⠛⠛⠛⠛⠉       \033[0m")
-    print("\033[1;30m[ OPHANIM PROTOCOL - SYNCHRONIZING SEALS ]\033[0m\n")
+    print("\033[1;30m[ OPHANIM PROTOCOL V2 - ASTRAL PLANE SYNC ]\033[0m\n")
 
-def julgamento_de_gabriel(Babel_Chord, gate):
+async def extrair_alma(reader, writer):
+    """ Tenta arrancar a identidade (Banner) do serviço rodando na porta """
     try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(Raziel_Timeout)
-        resultado = s.connect_ex((Babel_Chord, gate))
-        if resultado == 0:
-            return True
-        return False
+        # Envia um pulso para provocar uma resposta do servidor
+        writer.write(b"HEAD / HTTP/1.0\r\n\r\n")
+        await writer.drain()
+        
+        # Aguarda a resposta (a alma do serviço)
+        data = await asyncio.wait_for(reader.read(100), timeout=0.5)
+        alma = data.decode('utf-8', errors='ignore').split('\n')[0].strip()
+        return alma if alma else "SILÊNCIO ABSOLUTO"
     except:
-        return False
+        return "ENTIDADE DESCONHECIDA"
     finally:
-        s.close()
+        writer.close()
+        await writer.wait_closed()
 
-def Uriel_Vanguard(Babel_Chord):
-    while not Sephiroth_Path.empty():
-        gate = Sephiroth_Path.get()
-        if julgamento_de_gabriel(Babel_Chord, gate):
-            print(f"\033[1;36m[Δ] SELO ROMPIDO (PORTA ABERTA): {gate} \033[0m")
-            Opened_Seals.append(gate)
-        Sephiroth_Path.task_done()
+async def julgamento_de_gabriel(Babel_Chord, gate, Metatron_Gate):
+    """ Coroutine que julga a porta assincronamente """
+    async with Metatron_Gate:
+        try:
+            # Abre conexão não-bloqueante (Magia Sênior)
+            fut = asyncio.open_connection(Babel_Chord, gate)
+            reader, writer = await asyncio.wait_for(fut, timeout=Raziel_Timeout)
+            
+            # Se conectou, a porta está aberta. Vamos extrair a alma.
+            alma = await extrair_alma(reader, writer)
+            
+            # Exibe imediatamente o achado na tela
+            print(f"\033[1;36m[Δ] SELO ROMPIDO: {gate} \033[1;30m--> {alma}\033[0m")
+            Opened_Seals.append((gate, alma))
+        except:
+            pass # Porta fechada ou protegida
 
-def Metatron_Cubic(Babel_Chord, Enochian_Limit):
+async def ritual_assincrono(Babel_Chord, Enochian_Limit):
     ressonancia_esoterica()
-    print(f"\033[1;37m[+] Alinhando coordenadas de Babel: {Babel_Chord}\033[0m")
-    print(f"\033[1;37m[+] Invocando legião para os primeiros {Enochian_Limit} portões...\033[0m\n")
+    print(f"\033[1;37m[+] Focando prisma no IP: {Babel_Chord}\033[0m")
+    print(f"\033[1;37m[+] Invocando {Concurrence_Limit} coroutines para {Enochian_Limit} portões...\033[0m\n")
     
     start_time = time.time()
 
-    for gate in range(1, Enochian_Limit + 1):
-        Sephiroth_Path.put(gate)
-
-    choir_list = []
-    for _ in range(CHOIR_SIZE):
-        t = threading.Thread(target=Uriel_Vanguard, args=(Babel_Chord,))
-        choir_list.append(t)
-        t.start()
-
-    for t in choir_list:
-        t.join()
+    # O Portão de Metatron controla para não sobrecarregar a rede local
+    Metatron_Gate = asyncio.Semaphore(Concurrence_Limit)
+    
+    # Cria a matriz de tarefas (Tasks)
+    tasks = [
+        julgamento_de_gabriel(Babel_Chord, gate, Metatron_Gate) 
+        for gate in range(1, Enochian_Limit + 1)
+    ]
+    
+    # Executa todas as tarefas simultaneamente no plano astral
+    await asyncio.gather(*tasks)
 
     end_time = time.time()
     
-    print("\n\033[1;35m" + "∇"*45 + "\033[0m")
-    print(f"\033[1;37m[!] Ritual concluído em {round(end_time - start_time, 2)} ciclos.\033[0m")
-    print(f"\033[1;36m[+] Total de selos rompidos: {len(Opened_Seals)}\033[0m")
-    print("\033[1;35m" + "Δ"*45 + "\033[0m\n")
+    print("\n\033[1;35m" + "∇"*50 + "\033[0m")
+    print(f"\033[1;37m[!] Ritual convergido em {round(end_time - start_time, 2)} ciclos.\033[0m")
+    print(f"\033[1;36m[+] Total de selos expostos: {len(Opened_Seals)}\033[0m")
+    print("\033[1;35m" + "Δ"*50 + "\033[0m\n")
 
 if __name__ == "__main__":
+    # Garante compatibilidade do event loop em diferentes SOs
+    if sys.platform == 'win32':
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        
     try:
         ressonancia_esoterica()
         alvo = input("\033[1;30m[?] Insira a coordenada mortal (IP alvo): \033[0m")
-        if not alvo:
-            alvo = "127.0.0.1"
+        alvo = alvo if alvo else "127.0.0.1"
         
-        Limite = 1 << 10 
-        Metatron_Cubic(alvo, Limite)
+        # Matemática de bits: 1 << 14 = 16384 portas 
+        # (Agora que é assíncrono, podemos varrer milhares de portas em segundos)
+        Limite = 1 << 14 
+        
+        # Dispara o event loop (núcleo do asyncio)
+        asyncio.run(ritual_assincrono(alvo, Limite))
         
     except KeyboardInterrupt:
-        print("\n\033[1;31m[!] Desconexão neural forçada. Abortando.\033[0m")
+        print("\n\033[1;31m[!] Desconexão neural forçada. Abortando matriz.\033[0m")
         sys.exit(1)
