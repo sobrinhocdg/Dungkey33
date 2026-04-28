@@ -1,0 +1,71 @@
+```
+# Compiled/Binary files
+*.o
+*.obj
+*.out
+
+# Executables
+CORE_AUSPEX/auspex_forge
+OUROBOROS/tzimtzum_mutagen
+PROJECT_GOLEM/dybbuk
+PROJECT_GOLEM/emet_injector
+VOX_NIHILI/vox
+
+# Build artifacts
+build/
+dist/
+target/
+
+# Dependencies
+node_modules/
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Editor/IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+
+# System files
+.DS_Store
+Thumbs.db
+.env
+*.env.*
+
+# Logs
+*.log
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# Python specific
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# C/C++ specific
+*.a
+*.lib
+*.dll
+*.dylib
+*.exe
+*.out
+
+# Go specific
+*.exe
+*.test
+*.prof
+
+# Assembly specific
+*.o
+*.obj
+```
